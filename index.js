@@ -3,6 +3,7 @@ const express = require('express');
 const redis_connection = require('redis');
 const dotenv = require('dotenv');
 const fs = require('fs');
+const externalip = require('externalip');
 
 dotenv.config();
 
@@ -18,11 +19,14 @@ const app = express();
 app.listen(port, () => {
     console.log(`Server running at ${port} ...`)
 });
+externalip(function (err, ip) {
+    console.log(ip); // => 8.8.8.8
+});
 
 var redis_health = true;
 redis.on('connect', function() {
     redis_health = true;
-    console.log('Redis client connected');
+    // console.log('Redis client connected');
 });
 redis.on('error', function (err) {
     redis_health = false;
@@ -37,7 +41,7 @@ var logger = fs.createWriteStream('log.txt', {
 
 function heartbeat(){
     (async () => {
-        const dukcapil_health = await isPortReachable(8000, {host: '127.0.0.1'});
+        const dukcapil_health = await isPortReachable(process.env.DUKCAPIL_PORT, {host: process.env.DUKCAPIL_HOST});
         const data = {
             Datetime : new Date(),
             dukcapil_host : dukcapil_health,
@@ -63,6 +67,6 @@ function heartbeat(){
         }
         console.log('Datetime ' + new Date());
         console.log('Redis Health ' + redis_health);
-        console.log("Dukcapil Health " + dukcapil_health);
+        console.log('Dukcapil Health ' + dukcapil_health);
     })();
 }
